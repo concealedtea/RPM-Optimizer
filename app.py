@@ -1,22 +1,15 @@
 import pyodbc
-import sys
-import csv
-import os
+import sys, csv, os, json
 import pandas as pd
-from scipy.stats import linregress
-import csv
 import itertools as IT
-import json
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import linregress
 from collections import defaultdict
-def exec_query(
-    query_text,
-    item,
-    driver= "{ODBC Driver 13 for SQL Server};",
-    server= "REMOVED",
-    database= "REMOVED",
-    UID= "REMOVED",
-    PWD= "REMOVED",
-    return_value= True):
+
+
+def exec_query(query_text,item,driver= "{ODBC Driver 13 for SQL Server};",server= "push.ctwzprc2znex.us-east-1.rds.amazonaws.com;",
+               database= "Reports;",UID= "bob;",PWD= "industrylawpricesomewhere;",return_value= True):
     conn= pyodbc.connect(
         r'DRIVER='+driver+
         r'SERVER='+server+
@@ -39,15 +32,8 @@ def exec_query(
         conn.commit()
         conn.close()
         return
-def exec_query2(
-    query_text,
-    item,
-    driver= "{ODBC Driver 13 for SQL Server};",
-    server= "REMOVED",
-    database= "REMOVED",
-    UID= "REMOVED",
-    PWD= "REMOVED",
-    return_value= True):
+def exec_query2(query_text,item,driver= "{ODBC Driver 13 for SQL Server};",server= "push.ctwzprc2znex.us-east-1.rds.amazonaws.com;",
+               database= "Reports;",UID= "bob;",PWD= "industrylawpricesomewhere;",return_value= True):
     conn= pyodbc.connect(
         r'DRIVER='+driver+
         r'SERVER='+server+
@@ -73,7 +59,7 @@ def exec_query2(
 def main():
     country_codes = ['US','GB','CA','IN','Other']
     for item in country_codes:
-        query =  """SELECT
+        query =  ("""SELECT
                         advertiser
                         , age_bucket
                         , platform
@@ -96,9 +82,9 @@ def main():
                         FROM
                             Reports.dbo.DailyRevenue
                         WHERE 1=1
-                            AND [date] BETWEEN CAST(DATEADD(DAY,-7,GETDATE()) AS DATE) AND CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
+                            AND [date] BETWEEN CAST(DATEADD(DAY,-14,GETDATE()) AS DATE) AND CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
                             AND category = 'push'
-                            AND CASE WHEN OfferType = 'indirect' THEN '5th Ave News' ELSE revenuestream END IN ( 'MGID' , 'ContentAd' , 'RevContent', '5th ave news' )
+                            AND CASE WHEN OfferType = 'indirect' THEN '5th Ave News' ELSE revenuestream END IN ('AdBlade', 'MGID' , 'ContentAd' , 'RevContent', '5th ave news' )
                         GROUP BY
                             [date]
                             , country
@@ -123,7 +109,7 @@ def main():
                         FROM
                             Reports.dbo.UserMetrics_Rollup WITH (NOLOCK)
                         WHERE 1=1
-                            AND CAST(DATEADD(HOUR,-4,Timeslice) AS DATE) BETWEEN CAST(DATEADD(DAY,-7,GETDATE()) AS DATE) AND CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
+                            AND CAST(DATEADD(HOUR,-4,Timeslice) AS DATE) BETWEEN CAST(DATEADD(DAY,-14,GETDATE()) AS DATE) AND CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
                         GROUP BY
                             country
                             , advertiser
@@ -133,7 +119,7 @@ def main():
                             SUM(receives) > 500
                     ) rpm_table
                     WHERE 1=1
-                    AND country = '"""+item+"""'
+                    AND country = '""" + item + """'
                     AND advertiser != 'Unknown'
                     GROUP BY
                         advertiser
@@ -141,19 +127,27 @@ def main():
                         , age_bucket
                     HAVING
                         ISNULL(1000 * SUM(revenue) / NULLIF(CAST(SUM(receives) AS FLOAT),0),0) > 0
+                        AND ISNULL(1000 * SUM(revenue) / NULLIF(CAST(SUM(receives) AS FLOAT),0),0) < 15
                     ORDER BY
                         age_bucket
-                        , [platform]"""
-        query2 = """SELECT
+                        , [platform]""")
+        query2 = ("""SELECT
                         CASE
-                            WHEN date = CAST(DATEADD(DAY,-7,GETDATE()) AS DATE) THEN 1
-                            WHEN date = CAST(DATEADD(DAY,-6,GETDATE()) AS DATE) THEN 2
-                            WHEN date = CAST(DATEADD(DAY,-5,GETDATE()) AS DATE) THEN 3
-                            WHEN date = CAST(DATEADD(DAY,-4,GETDATE()) AS DATE) THEN 4
-                            WHEN date = CAST(DATEADD(DAY,-3,GETDATE()) AS DATE) THEN 5
-                            WHEN date = CAST(DATEADD(DAY,-2,GETDATE()) AS DATE) THEN 6
-                            WHEN date = CAST(DATEADD(DAY,-1,GETDATE()) AS DATE) THEN 7
-                            ELSE 8
+							WHEN date = CAST(DATEADD(DAY,-14,GETDATE()) AS DATE) THEN 1
+                            WHEN date = CAST(DATEADD(DAY,-13,GETDATE()) AS DATE) THEN 2
+                            WHEN date = CAST(DATEADD(DAY,-12,GETDATE()) AS DATE) THEN 3
+                            WHEN date = CAST(DATEADD(DAY,-11,GETDATE()) AS DATE) THEN 4
+                            WHEN date = CAST(DATEADD(DAY,-10,GETDATE()) AS DATE) THEN 5
+                            WHEN date = CAST(DATEADD(DAY,-9,GETDATE()) AS DATE) THEN 6
+                            WHEN date = CAST(DATEADD(DAY,-8,GETDATE()) AS DATE) THEN 7
+							WHEN date = CAST(DATEADD(DAY,-7,GETDATE()) AS DATE) THEN 8
+                            WHEN date = CAST(DATEADD(DAY,-6,GETDATE()) AS DATE) THEN 9
+                            WHEN date = CAST(DATEADD(DAY,-5,GETDATE()) AS DATE) THEN 10
+                            WHEN date = CAST(DATEADD(DAY,-4,GETDATE()) AS DATE) THEN 11
+                            WHEN date = CAST(DATEADD(DAY,-3,GETDATE()) AS DATE) THEN 12
+                            WHEN date = CAST(DATEADD(DAY,-2,GETDATE()) AS DATE) THEN 13
+                            WHEN date = CAST(DATEADD(DAY,-1,GETDATE()) AS DATE) THEN 14
+                            ELSE 1
                         END AS [date]
                         , advertiser
                         , age_bucket
@@ -172,9 +166,9 @@ def main():
                         FROM
                             Reports.dbo.DailyRevenue
                         WHERE 1=1
-                            AND [date] BETWEEN CAST(DATEADD(DAY,-7,GETDATE()) AS DATE) AND CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
+                            AND [date] BETWEEN CAST(DATEADD(DAY,-14,GETDATE()) AS DATE) AND CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
                             AND category = 'push'
-                            AND CASE WHEN OfferType = 'indirect' THEN '5th Ave News' ELSE revenuestream END IN ( 'MGID' , 'ContentAd' , 'RevContent', '5th ave news' )
+                            AND CASE WHEN OfferType = 'indirect' THEN '5th Ave News' ELSE revenuestream END IN ( 'MGID' , 'ContentAd' , 'RevContent', '5th ave news', 'AdBlade' )
                         GROUP BY
                             [date]
                             , country
@@ -194,7 +188,7 @@ def main():
                         FROM
                             Reports.dbo.UserMetrics_Rollup WITH (NOLOCK)
                         WHERE 1=1
-                            AND CAST(DATEADD(HOUR,-4,Timeslice) AS DATE) BETWEEN CAST(DATEADD(DAY,-7,GETDATE()) AS DATE) AND CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
+                            AND CAST(DATEADD(HOUR,-4,Timeslice) AS DATE) BETWEEN CAST(DATEADD(DAY,-14,GETDATE()) AS DATE) AND CAST(DATEADD(DAY,-1,GETDATE()) AS DATE)
                         GROUP BY
                             CAST(DATEADD(HOUR,-4,Timeslice) AS DATE)
                             , country
@@ -207,16 +201,18 @@ def main():
                     WHERE 1=1
                     AND country = '""" + item + """'
                 	AND advertiser != 'Unknown'
-    				AND advertiser = 'MGID' OR advertiser = 'ContentAd' OR advertiser = 'RevContent'
+    				AND advertiser = 'MGID' OR advertiser = 'ContentAd' OR advertiser = 'RevContent' OR advertiser = 'AdBlade'
                     GROUP BY
                         date
                 		, advertiser
                         , platform
                         , age_bucket
+                    HAVING
+                        ISNULL(1000 * SUM(revenue) / NULLIF(CAST(SUM(receives) AS FLOAT),0),0) < 15
                     ORDER BY
                         date,
                         platform,
-                        age_bucket"""
+                        age_bucket""")
         ###########################################################################
         # Add RPM % Column
         ###########################################################################
@@ -240,8 +236,8 @@ def main():
         ###########################################################################
         dfCalculator = pd.read_csv('RPMresults'+ item +'.csv')
         slopes_pcts = dfCalculator.groupby(['age_bucket','platform']).apply(lambda x:x.Slope/x.Slope.sum())
-        list_multiplied = [a*(1+b) for a,b in zip(dfCalculator['percentiles'].tolist(),slopes)]
-        list_multiplied2 = [a*a*(1+b) for a,b in zip(dfCalculator['percentiles'].tolist(),slopes)]
+        list_multiplied = [a*(100+b)/100 for a,b in zip(dfCalculator['percentiles'].tolist(),slopes)]
+        list_multiplied2 = [a*a*(100+b)/100 for a,b in zip(dfCalculator['percentiles'].tolist(),slopes)]
         pcts_column = pd.DataFrame({'Pre100Slope': list(list_multiplied)})
         pcts_column2 = pd.DataFrame({'Pre100RPM': list(list_multiplied2)})
         dfCalculator = dfSlopes.merge(pcts_column, left_index = True, right_index = True)
