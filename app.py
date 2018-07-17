@@ -8,8 +8,8 @@ from scipy.stats import linregress
 from collections import defaultdict
 
 
-def exec_query(query_text,item,driver= "{ODBC Driver 13 for SQL Server};",server= "push.ctwzprc2znex.us-east-1.rds.amazonaws.com;",
-               database= "Reports;",UID= "bob;",PWD= "industrylawpricesomewhere;",return_value= True):
+def exec_query(query_text,item,driver= "{ODBC Driver 13 for SQL Server};",server= "REMOVED;",
+               database= "REMOVED;",UID= "REMOVED;",PWD= "REMOVED;",return_value= True):
     conn= pyodbc.connect(
         r'DRIVER='+driver+
         r'SERVER='+server+
@@ -32,8 +32,8 @@ def exec_query(query_text,item,driver= "{ODBC Driver 13 for SQL Server};",server
         conn.commit()
         conn.close()
         return
-def exec_query2(query_text,item,driver= "{ODBC Driver 13 for SQL Server};",server= "push.ctwzprc2znex.us-east-1.rds.amazonaws.com;",
-               database= "Reports;",UID= "bob;",PWD= "industrylawpricesomewhere;",return_value= True):
+def exec_query2(query_text,item,driver= "{ODBC Driver 13 for SQL Server};",server= "REMOVED;",
+               database= "REMOVED;",UID= "REMOVED;",PWD= "REMOVED;",return_value= True):
     conn= pyodbc.connect(
         r'DRIVER='+driver+
         r'SERVER='+server+
