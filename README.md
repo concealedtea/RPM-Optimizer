@@ -1,1 +1,2 @@
-'RPM-Optimization\n Tool to Optimize RPM for user distribution' 
+RPM-Optimization  
+Tool to Optimize RPM for user distribution
